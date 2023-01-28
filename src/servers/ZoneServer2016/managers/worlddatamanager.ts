@@ -827,7 +827,7 @@ export class WorldDataManager {
 
   async loadConstructionData(server: ZoneServer2016) {
     if (!server.enableWorldSaves) return;
-    let constructionParents: Array<ConstructionParentSaveData> = [];
+    let constructionParents: Array<any> = [];
     if (server._soloMode) {
       constructionParents = require(`${server._appDataFolder}/worlddata/construction.json`);
       if (!constructionParents) {
@@ -856,7 +856,14 @@ export class WorldDataManager {
       );
     }
     constructionParents.forEach((parent) => {
-      this.loadConstructionParentEntity(server, parent);
+      if (parent.raw) {
+        this.loadConstructionParentEntity(server, {
+          serverId: parent.serverId,
+          ...JSON.parse(parent.raw),
+        });
+      } else {
+        this.loadConstructionParentEntity(server, parent);
+      }
     });
   }
 
@@ -988,11 +995,16 @@ export class WorldDataManager {
 
   async saveConstructionData(server: ZoneServer2016) {
     if (!server.enableWorldSaves) return;
-    const construction: Array<ConstructionParentSaveData> = [];
+    const construction: Array<any> = [];
 
     Object.values(server._constructionFoundations).forEach((entity) => {
       if (entity.itemDefinitionId != Items.FOUNDATION_EXPANSION) {
-        construction.push(this.getConstructionParentSaveData(server, entity));
+        construction.push({
+          serverId: server._worldId,
+          raw: JSON.stringify(
+            this.getConstructionParentSaveData(server, entity)
+          ),
+        });
       }
     });
     if (server._soloMode) {
@@ -1041,11 +1053,14 @@ export class WorldDataManager {
 
   async saveCropData(server: ZoneServer2016) {
     if (!server.enableWorldSaves) return;
-    const crops: Array<PlantingDiameterSaveData> = [];
+    const crops: Array<any> = [];
 
     Object.values(server._temporaryObjects).forEach((entity) => {
       if (entity instanceof PlantingDiameter) {
-        crops.push(this.getPlantingDiameterSaveData(server, entity));
+        crops.push({
+          serverId: server._worldId,
+          raw: JSON.stringify(this.getPlantingDiameterSaveData(server, entity)),
+        });
       }
     });
 
@@ -1123,7 +1138,7 @@ export class WorldDataManager {
 
   async loadCropData(server: ZoneServer2016) {
     if (!server.enableWorldSaves) return;
-    let crops: Array<PlantingDiameterSaveData> = [];
+    let crops: Array<any> = [];
     if (server._soloMode) {
       crops = require(`${server._appDataFolder}/worlddata/crops.json`);
       if (!crops) {
@@ -1151,15 +1166,27 @@ export class WorldDataManager {
       );
     }
     crops.forEach((entityData) => {
-      this.loadPlantingDiameter(server, entityData);
+      if (entityData.raw) {
+        this.loadPlantingDiameter(server, {
+          serverId: entityData.serverId,
+          ...JSON.parse(entityData.raw),
+        });
+      } else {
+        this.loadPlantingDiameter(server, entityData);
+      }
     });
   }
 
   async saveWorldFreeplaceConstruction(server: ZoneServer2016) {
     //worldconstruction
-    const freeplace: Array<LootableConstructionSaveData> = [];
+    const freeplace: Array<any> = [];
     Object.values(server._worldLootableConstruction).forEach((entity) => {
-      freeplace.push(this.getLootableConstructionSaveData(server, entity));
+      freeplace.push({
+        serverId: server._worldId,
+        raw: JSON.stringify(
+          this.getLootableConstructionSaveData(server, entity)
+        ),
+      });
     });
 
     if (server._soloMode) {
@@ -1184,7 +1211,7 @@ export class WorldDataManager {
   async loadWorldFreeplaceConstruction(server: ZoneServer2016) {
     //worldconstruction
     if (!server.enableWorldSaves) return;
-    let freeplace: Array<LootableConstructionSaveData> = [];
+    let freeplace: Array<any> = [];
     if (server._soloMode) {
       freeplace = require(`${server._appDataFolder}/worlddata/worldconstruction.json`);
       if (!freeplace) {
@@ -1212,7 +1239,15 @@ export class WorldDataManager {
       );
     }
     freeplace.forEach((entityData) => {
-      this.loadLootableConstructionEntity(server, entityData, true);
+      if (entityData.raw) {
+        this.loadLootableConstructionEntity(
+          server,
+          { serverId: entityData.serverId, ...JSON.parse(entityData.raw) },
+          true
+        );
+      } else {
+        this.loadLootableConstructionEntity(server, entityData, true);
+      }
     });
   }
 
