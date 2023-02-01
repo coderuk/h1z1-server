@@ -291,17 +291,14 @@ export class ConstructionParentEntity extends ConstructionChildEntity {
     let secure = true;
 
     const expansion = this.occupiedExpansionSlots[side];
-    console.log("EXPANSION")
-    if(expansion && expansion.isSecured) {
-      console.log(`side ${side} secure`)
+    if(expansion && expansion.getWallsSecured()) {
+      //console.log(`side ${side} secure`)
       return true;
     }
 
     Object.keys(this.wallSlots).forEach((slot) => {
       const slotId = Number(slot)
       const wall = this.occupiedWallSlots[slotId];
-      console.log(side)
-      console.log(this.getSideFromWallSlot(slotId))
       if (
         side == this.getSideFromWallSlot(slotId) &&
         (!wall || !wall.isSecured)
@@ -310,7 +307,7 @@ export class ConstructionParentEntity extends ConstructionChildEntity {
         return;
       }
     });
-    console.log(`side ${side} returning ${secure}`)
+    //console.log(`side ${side} returning ${secure}`)
     return secure;
   }
 
@@ -342,7 +339,7 @@ export class ConstructionParentEntity extends ConstructionChildEntity {
         break;
       case Items.FOUNDATION_EXPANSION:
         const parent = this.getParentFoundation(server);
-        console.log("expansion updating parent")
+        //console.log("expansion updating parent")
         if(parent) parent.updateSecuredState(server);
         break;
     }
@@ -383,14 +380,12 @@ export class ConstructionParentEntity extends ConstructionChildEntity {
         this.isSecured = true;
         return;
       case Items.FOUNDATION_EXPANSION:
-        console.log("updating expansion")
         const parent = this.getParentFoundation(server);
         if(!parent) {
           server.sendAlertToAll("EXPANSION INSECURE");
           this.isSecured = false;
           return;
         }
-        console.log(`fuck ${parent.getOtherSidesSecured(this.getSlotNumber())}`)
         if(this.getWallsSecured() && (this.getDependentWallsSecured(server) || parent.getOtherSidesSecured(this.getSlotNumber()))) {
           server.sendAlertToAll("EXPANSION SECURE");
           this.isSecured = true;
@@ -527,7 +522,7 @@ export class ConstructionParentEntity extends ConstructionChildEntity {
     const set = super.setWallSlot(server, wall);
     if(this.itemDefinitionId == Items.FOUNDATION) {
       const expansion = this.occupiedExpansionSlots[this.getSideFromWallSlot(wall.getSlotNumber())];
-      console.log(expansion)
+      //console.log(expansion)
       if(expansion) expansion.updateSecurity(server);
     }
     return set;
