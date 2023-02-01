@@ -455,6 +455,12 @@ export class ConstructionChildEntity extends BaseLightweightCharacter {
     });
     if (slotMap) parent.clearSlot(this.getSlotNumber(), slotMap);
     if (updateSecured) parent.updateSecuredState(server);
+    /*
+    if(parent.itemDefinitionId == Items.FOUNDATION_EXPANSION) {
+      const parentFoundation = parent.getParentFoundation(server);
+      if(parentF)
+    }
+    */
 
     // re-register now disconnected slotted entities as freeplace entities
     const parentFoundation = this.getParentFoundation(server);
