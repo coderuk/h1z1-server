@@ -123,7 +123,7 @@ export class ConstructionDoor extends DoorEntity {
         break;
     }
     if (slotMap) parent.clearSlot(this.getSlotNumber(), slotMap);
-    if (updateSecured) parent.updateSecuredState(server);
+    if (updateSecured) parent.updateSecurity(server);
   }
 
   canUndoPlacement(server: ZoneServer2016, client: ZoneClient2016) {
@@ -139,7 +139,7 @@ export class ConstructionDoor extends DoorEntity {
     );
   }
 
-  getParent(server: ZoneServer2016): ConstructionChildEntity | undefined {
+  getParent(server: ZoneServer2016): ConstructionChildEntity | ConstructionParentEntity | undefined {
     return (
       server._constructionSimple[this.parentObjectCharacterId] ||
       server._constructionFoundations[this.parentObjectCharacterId]
@@ -235,7 +235,7 @@ export class ConstructionDoor extends DoorEntity {
         this.isSecured = !this.isOpen;
         const parent = this.getParent(server);
         if (parent) {
-          parent.updateSecuredState(server);
+          parent.updateSecurity(server);
           // spawn hidden characters emmediately after door opens
           const allowedConstruction = [
             Items.SHELTER,

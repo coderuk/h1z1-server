@@ -119,11 +119,11 @@ export class ConstructionParentEntity extends ConstructionChildEntity {
         if (parent) {
           // get 3rd dependent foundation wall pos
           const dependentWallPos = parent.getSlotPosition(
-              this.getDependentWalls()[2],
+              this.getWallSlotsFromSide(this.getSlotNumber())[2],
               parent.wallSlots
             ),
             dependentWallRot = parent.getSlotRotation(
-              this.getDependentWalls()[2],
+              this.getWallSlotsFromSide(this.getSlotNumber())[2],
               parent.wallSlots
             );
 
@@ -225,9 +225,9 @@ export class ConstructionParentEntity extends ConstructionChildEntity {
    * [Deck expansions only] Returns an array containing the parent foundation walls that a given expansion depends on to be secured.
    * @param expansion The expansion to check.
    */
-  getDependentWalls(): Array<number> {
+  getWallSlotsFromSide(slot: number): Array<number> {
     if(this.itemDefinitionId != Items.FOUNDATION_EXPANSION) return [];
-    switch (this.getSlotNumber()) {
+    switch (slot) {
       case 1:
         return [4, 5, 6];
       case 2:
@@ -249,7 +249,7 @@ export class ConstructionParentEntity extends ConstructionChildEntity {
     const parent = this.getParentFoundation(server);
     if(!parent) return false;
     let secured = true;
-    const slots = this.getDependentWalls();
+    const slots = this.getWallSlotsFromSide(this.getSlotNumber());
     slots.forEach((slot) => {
       const wall = parent.occupiedWallSlots[slot];
       if(!wall || !wall.isSecured) {
@@ -264,7 +264,7 @@ export class ConstructionParentEntity extends ConstructionChildEntity {
    * [Deck foundations only] Returns the slotId of an expansion on the same side as a given wall.
    * @param expansion The expansion to check.
    */
-  getDependentExpansion(slotId: number): number {
+  getSideFromWallSlot(slotId: number): number {
     switch (slotId) {
       case 4:
       case 5:
@@ -291,21 +291,26 @@ export class ConstructionParentEntity extends ConstructionChildEntity {
     let secure = true;
 
     const expansion = this.occupiedExpansionSlots[side];
+    console.log("EXPANSION")
     if(expansion && expansion.isSecured) {
+      console.log(`side ${side} secure`)
       return true;
     }
 
     Object.keys(this.wallSlots).forEach((slot) => {
       const slotId = Number(slot)
       const wall = this.occupiedWallSlots[slotId];
+      console.log(side)
+      console.log(this.getSideFromWallSlot(slotId))
       if (
-        side == this.getDependentExpansion(slotId) &&
+        side == this.getSideFromWallSlot(slotId) &&
         (!wall || !wall.isSecured)
       ) {
         secure = false;
         return;
       }
     });
+    console.log(`side ${side} returning ${secure}`)
     return secure;
   }
 
@@ -330,33 +335,52 @@ export class ConstructionParentEntity extends ConstructionChildEntity {
   }
 
   updateSecurity(server: ZoneServer2016) {
-    
+    this.updateSecuredState(server);
+    switch(this.itemDefinitionId) {
+      case Items.FOUNDATION:
+        this.updateExpansionsSecuredStates(server);
+        break;
+      case Items.FOUNDATION_EXPANSION:
+        const parent = this.getParentFoundation(server);
+        console.log("expansion updating parent")
+        if(parent) parent.updateSecuredState(server);
+        break;
+    }
   }
 
-  updateExpansionsSecuredState(server: ZoneServer2016) {
+  private updateExpansionsSecuredStates(server: ZoneServer2016) {
     for (const expansion of Object.values(this.occupiedExpansionSlots)) {
       expansion.updateSecuredState(server);
     }
   }
 
-  updateSecuredState(server: ZoneServer2016) {
+  /**
+   * Checks if all sides other than the one passed in are secured on a deck foundation.
+   * @returns boolean
+   */
+  protected getOtherSidesSecured(side: number): boolean {
+    let secured = true;
+    for(let i = 1; i < 5; i++) {
+      if(i != side && !this.isSideSecure(side)) { 
+        secured = false;
+        break;
+      }
+    }
+    return secured;
+  }
+
+  protected updateSecuredState(server: ZoneServer2016) {
     switch(this.itemDefinitionId) {
       case Items.FOUNDATION:
         for(let i = 1; i < 5; i++) {
           if(!this.isSideSecure(i)) { 
             this.isSecured = false;
             server.sendAlertToAll("DECK INSECURE");
-            for (const expansion of Object.values(this.occupiedExpansionSlots)) {
-              if(expansion.isSecured) expansion.updateSecuredState(server);
-            }
             return;
           }
         }
         server.sendAlertToAll("DECK SECURE");
         this.isSecured = true;
-        for (const expansion of Object.values(this.occupiedExpansionSlots)) {
-          if(!expansion.isSecured) expansion.updateSecuredState(server);
-        }
         return;
       case Items.FOUNDATION_EXPANSION:
         console.log("updating expansion")
@@ -366,14 +390,14 @@ export class ConstructionParentEntity extends ConstructionChildEntity {
           this.isSecured = false;
           return;
         }
-        if(this.getWallsSecured() && (parent.isSecured || this.getDependentWallsSecured(server))) {
+        console.log(`fuck ${parent.getOtherSidesSecured(this.getSlotNumber())}`)
+        if(this.getWallsSecured() && (this.getDependentWallsSecured(server) || parent.getOtherSidesSecured(this.getSlotNumber()))) {
           server.sendAlertToAll("EXPANSION SECURE");
           this.isSecured = true;
           return;
         }
         server.sendAlertToAll("EXPANSION INSECURE");
         this.isSecured = false;
-        if(parent.isSecured) parent.updateSecuredState(server);
     }
 
     /*
@@ -502,9 +526,9 @@ export class ConstructionParentEntity extends ConstructionChildEntity {
   ): boolean {
     const set = super.setWallSlot(server, wall);
     if(this.itemDefinitionId == Items.FOUNDATION) {
-      const expansion = this.occupiedExpansionSlots[this.getDependentExpansion(wall.getSlotNumber())];
+      const expansion = this.occupiedExpansionSlots[this.getSideFromWallSlot(wall.getSlotNumber())];
       console.log(expansion)
-      if(expansion) expansion.updateSecuredState(server);
+      if(expansion) expansion.updateSecurity(server);
     }
     return set;
   }

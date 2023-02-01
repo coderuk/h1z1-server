@@ -201,7 +201,11 @@ export class ConstructionChildEntity extends BaseLightweightCharacter {
     return slots[slot]?.rotation || undefined;
   }
 
-  updateSecuredState(server: ZoneServer2016) {
+  updateSecurity(server: ZoneServer2016) {
+    this.updateSecuredState(server);
+  }
+
+  protected updateSecuredState(server: ZoneServer2016) {
     switch (this.itemDefinitionId) {
       case Items.METAL_DOORWAY: // for parent foundation
         const door = this.occupiedWallSlots[1];
@@ -213,7 +217,7 @@ export class ConstructionChildEntity extends BaseLightweightCharacter {
         }
         const parent = this.getParentFoundation(server);
         if (!parent) return;
-        parent.updateSecuredState(server);
+        parent.updateSecurity(server);
         break;
       case Items.SHELTER_LARGE:
       case Items.SHELTER_UPPER_LARGE:
@@ -322,7 +326,7 @@ export class ConstructionChildEntity extends BaseLightweightCharacter {
       this.wallSlots,
       this.occupiedWallSlots
     );
-    if (set) this.updateSecuredState(server);
+    if (set) this.updateSecurity(server);
     return set;
   }
 
@@ -349,7 +353,7 @@ export class ConstructionChildEntity extends BaseLightweightCharacter {
       this.shelterSlots,
       this.occupiedShelterSlots
     );
-    if (set) this.updateSecuredState(server);
+    if (set) this.updateSecurity(server);
     return set;
   }
 
@@ -454,7 +458,7 @@ export class ConstructionChildEntity extends BaseLightweightCharacter {
       freeplace = [...freeplace, ...Object.values(slotMap)];
     });
     if (slotMap) parent.clearSlot(this.getSlotNumber(), slotMap);
-    if (updateSecured) parent.updateSecuredState(server);
+    if (updateSecured) parent.updateSecurity(server);
     /*
     if(parent.itemDefinitionId == Items.FOUNDATION_EXPANSION) {
       const parentFoundation = parent.getParentFoundation(server);
