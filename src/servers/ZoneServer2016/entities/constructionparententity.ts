@@ -347,6 +347,7 @@ export class ConstructionParentEntity extends ConstructionChildEntity {
 
   private updateExpansionsSecuredStates(server: ZoneServer2016) {
     for (const expansion of Object.values(this.occupiedExpansionSlots)) {
+      console.log("updateExpansionsSecuredStates")
       expansion.updateSecuredState(server);
     }
   }
@@ -356,12 +357,14 @@ export class ConstructionParentEntity extends ConstructionChildEntity {
    * @returns boolean
    */
   protected getOtherSidesSecured(side: number): boolean {
+    if(this.itemDefinitionId != Items.FOUNDATION) return false;
     let secured = true;
     for(let i = 1; i < 5; i++) {
-      if(i != side && !this.isSideSecure(side)) { 
+      if(i != side && !this.isSideSecure(side)) {
+        console.log(`getOtherSidesSecured`) 
         secured = false;
         break;
-      }
+      }   
     }
     return secured;
   }
@@ -393,6 +396,12 @@ export class ConstructionParentEntity extends ConstructionChildEntity {
         }
         server.sendAlertToAll("EXPANSION INSECURE");
         this.isSecured = false;
+      default:
+        if(!this.getWallsSecured()) {
+          this.isSecured = false;
+          return;
+        }
+        break;
     }
 
     /*
