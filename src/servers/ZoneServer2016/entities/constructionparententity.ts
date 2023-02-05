@@ -536,6 +536,20 @@ export class ConstructionParentEntity extends ConstructionChildEntity {
         }
       }
     }
+
+    Object.values(this.occupiedWallSlots).forEach((entity) => {
+      entity.destroy(server);
+    })
+    Object.values(this.occupiedRampSlots).forEach((entity) => {
+      entity.destroy(server);
+    })
+    Object.values(this.occupiedExpansionSlots).forEach((entity) => {
+      entity.destroy(server);
+    })
+    Object.values(this.freeplaceEntities).forEach((entity) => {
+      entity.destroy(server);
+    })
+
     const parent =
       server._constructionFoundations[this.parentObjectCharacterId];
     if (!parent) return;
