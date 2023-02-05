@@ -465,6 +465,9 @@ export class ConstructionChildEntity extends BaseLightweightCharacter {
         entity.parentObjectCharacterId = parentFoundation.characterId;
         parentFoundation.freeplaceEntities[entity.characterId] = entity;
       });
+      Object.values(this.freeplaceEntities).forEach((entity) => {
+        entity.parentObjectCharacterId = parentFoundation.characterId;
+      })
       parentFoundation.freeplaceEntities = {
         ...parentFoundation.freeplaceEntities,
         ...this.freeplaceEntities,
